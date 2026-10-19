@@ -8,10 +8,12 @@
 3. 将评测结果写入 logs/eval_YYYYMMDD.log（含时间戳、随机种子、样本数等必含字段）；
 4. 支持横向对比：--compare 自动发现 outputs/preds_*.jsonl 并生成 Markdown 对比表；
 5. 支持 --selfcheck：用真实测试集标签构造「上界(oracle)」与「多数类基线」，
-   验证评测流水线正确性（oracle 应得满分，多数类基线约为类别占比）。
+   验证评测流水线正确性（oracle 应得满分，多数类基线约为类别占比）；
+6. 支持 --plot：为 --pred 的单个方案绘制混淆矩阵热力图（PNG，存到 outputs/）。
 
 用法（在仓库根目录 NLP_job/ 下执行）：
     python -m src.eval.evaluate --pred outputs/preds_baseline.jsonl
+    python -m src.eval.evaluate --pred outputs/preds_baseline.jsonl --plot
     python -m src.eval.evaluate --compare
     python -m src.eval.evaluate --selfcheck
 """
@@ -27,6 +29,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .metrics import compute_metrics
+from .visualize import plot_confusion_matrix
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -231,7 +234,7 @@ def run_selfcheck(logger: logging.Logger) -> list:
     return results
 
 
-def run_single(path_str: str, logger: logging.Logger) -> list:
+def run_single(path_str: str, logger: logging.Logger, plot: bool = False) -> list:
     path = Path(path_str)
     if not path.exists():
         raise FileNotFoundError(f"预测文件不存在：{path.as_posix()}")
@@ -240,6 +243,19 @@ def run_single(path_str: str, logger: logging.Logger) -> list:
     logger.info(f"读取预测文件 {path.as_posix()}：{len(preds)} 条")
     result = evaluate_predictions(preds, gold, logger, path.name)
     logger.info("\n" + format_report(result))
+    if plot:
+        stem = path.stem  # 如 preds_baseline
+        fig_path = OUTPUTS_DIR / f"confusion_matrix_{stem}.png"
+        try:
+            plot_confusion_matrix(
+                result["metrics"]["confusion_matrix"],
+                result["metrics"]["labels"],
+                fig_path,
+                title=f"Confusion Matrix - {stem}",
+            )
+            logger.info(f"混淆矩阵图已保存：{fig_path.as_posix()}")
+        except ImportError as e:
+            logger.warning(f"未安装 matplotlib，跳过出图：{e}")
     return [result]
 
 
@@ -267,6 +283,7 @@ def main():
     group.add_argument("--pred", type=str, help="评测单个预测文件，如 outputs/preds_baseline.jsonl")
     group.add_argument("--compare", action="store_true", help="自动对比 outputs/ 下所有 preds_*.jsonl")
     group.add_argument("--selfcheck", action="store_true", help="用真实标签验证评测流水线")
+    parser.add_argument("--plot", action="store_true", help="为 --pred 生成混淆矩阵 PNG 图（存到 outputs/）")
     args = parser.parse_args()
 
     logger = setup_logger()
@@ -278,7 +295,7 @@ def main():
     elif args.compare:
         run_compare(logger)
     else:
-        run_single(args.pred, logger)
+        run_single(args.pred, logger, plot=args.plot)
 
     logger.info("评测完成")
 

@@ -4,3 +4,6 @@
 jieba>=0.42.1
 scikit-learn>=1.6.1
 numpy>=2.0.1
+
+# 成员 C 评测可视化（混淆矩阵出图）
+matplotlib>=3.8
