@@ -1,0 +1,75 @@
+2026-10-19 11:35:25,380 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261019.log
+2026-10-19 11:35:25,380 [INFO] 统一评测脚本启动
+2026-10-19 11:35:25,380 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-19 11:35:25,385 [INFO] SelfCheck: 读取测试集 992 条真实标签
+2026-10-19 11:35:25,385 [INFO] SelfCheck: 随机种子 seed=42（本次不涉及随机抽样）
+2026-10-19 11:35:25,388 [INFO] 
+===== 评测报告：selfcheck_oracle(上界) =====
+样本数：992
+Accuracy     : 1.0000
+Macro-Precision: 1.0000
+Macro-Recall   : 1.0000
+Macro-F1       : 1.0000
+----------------------------------------
+label            P       R      F1   support
+positive    1.0000  1.0000  1.0000       532
+negative    1.0000  1.0000  1.0000       460
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive           532           0
+negative             0         460
+----------------------------------------
+延迟统计：mean=0.00ms  min=0.00ms  max=0.00ms  (n=992)
+2026-10-19 11:35:25,416 [INFO] 
+===== 评测报告：selfcheck_majority(多数类基线) =====
+样本数：992
+Accuracy     : 0.5363
+Macro-Precision: 0.2681
+Macro-Recall   : 0.5000
+Macro-F1       : 0.3491
+----------------------------------------
+label            P       R      F1   support
+positive    0.5363  1.0000  0.6982       532
+negative    0.0000  0.0000  0.0000       460
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive           532           0
+negative           460           0
+----------------------------------------
+延迟统计：mean=0.00ms  min=0.00ms  max=0.00ms  (n=992)
+2026-10-19 11:35:25,417 [INFO] 
+| 方案 | Accuracy | Macro-P | Macro-R | Macro-F1 | 平均延迟(ms) | 样本数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| selfcheck_oracle(上界) | 1.0000 | 1.0000 | 1.0000 | 1.0000 | 0.00 | 992 |
+| selfcheck_majority(多数类基线) | 0.5363 | 0.2681 | 0.5000 | 0.3491 | 0.00 | 992 |
+2026-10-19 11:35:25,417 [INFO] 评测完成
+2026-10-19 11:35:46,713 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261019.log
+2026-10-19 11:35:46,713 [INFO] 统一评测脚本启动
+2026-10-19 11:35:46,713 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-19 11:35:46,714 [WARNING] outputs/ 目录不存在：D:/桌面/作业/npl/NLP_job/outputs
+2026-10-19 11:35:46,714 [INFO] 评测完成
+2026-10-19 11:35:50,648 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261019.log
+2026-10-19 11:35:50,648 [INFO] 统一评测脚本启动
+2026-10-19 11:35:50,648 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-19 11:35:50,672 [INFO] 读取预测文件 outputs/_tmp_selftest.jsonl：10 条
+2026-10-19 11:35:50,672 [INFO] 
+===== 评测报告：_tmp_selftest.jsonl =====
+样本数：10
+Accuracy     : 0.0000
+Macro-Precision: 0.0000
+Macro-Recall   : 0.0000
+Macro-F1       : 0.0000
+----------------------------------------
+label            P       R      F1   support
+positive    0.0000  0.0000  0.0000         0
+negative    0.0000  0.0000  0.0000        10
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive             0           0
+negative            10           0
+----------------------------------------
+延迟统计：mean=6.00ms  min=1.50ms  max=10.50ms  (n=10)
+2026-10-19 11:35:50,672 [INFO] 评测完成
