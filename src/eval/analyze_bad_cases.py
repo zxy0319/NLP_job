@@ -1,27 +1,33 @@
 # -*- coding: utf-8 -*-
 """坏例分析与失败归因脚本（成员 C 负责）。
 
-读取 outputs/preds_*.jsonl，定位预测错误的样本，并按启发式规则自动归类到
-典型失败类型（对应报告 §6 的错误归因），输出代表性坏例与错误方向统计，
-落盘 logs/bad_cases_YYYYMMDD.log 作为工作量证据。
+读取 outputs/preds_*.jsonl，定位预测错误的样本，按启发式规则自动归类到
+典型失败类型（对应报告 §6 的错误归因，以及任务书「≥3 类失败样例逐一归因」
+的硬性要求），输出：
+
+1. 控制台 + logs/bad_cases_YYYYMMDD.log 摘要（含代表性坏例原文与归因说明）；
+2. 结构化文件 outputs/bad_cases_{model}.json —— 每条坏例含 text / gold_label /
+   pred_label / category / reason，供报告 §6 直接引用。
 
 归类规则（优先级从高到低，每条误判样本只归入首个命中类别）：
-1. negation（否定词反转）  ：文本含否定词，但模型判反 —— 情感分析最常见失败
-2. long_text（长文本混淆）  ：文本过长，上下文/信息冗余导致判断失真
-3. short_text（短文本信息不足）：文本过短，情感信号不充分
-4. other（其他）            ：不满足上述规则的误判
-
-否定词与长度阈值均为启发式默认值，可通过命令行参数调整；后续可据真实
-坏例分布迭代规则（这也正是"发现"环节的价值）。
+1. contrast（转折反转）   ：含转折/让步连词（但是/却/然而/虽然/不过…），
+                            前后情感反转，模型未能捕捉转折语义
+2. sarcasm（疑似讽刺/反语） ：含反语标记（居然/竟然/号称/所谓/呵呵…），
+                            模型按字面理解
+3. negation（否定词）      ：含否定词（不/没/无/非/别/莫/未/否…）
+4. long_text（长文本混淆） ：文本过长，上下文/信息冗余导致判断失真
+5. short_text（短文本不足） ：文本过短，情感信号不充分
+6. other（其他）           ：无明显特征，疑似边界模糊或标注歧义
 
 用法（在仓库根目录 NLP_job/ 下执行）：
     python -m src.eval.analyze_bad_cases --pred outputs/preds_baseline.jsonl
-    python -m src.eval.analyze_bad_cases --pred outputs/preds_llm.jsonl --top 10
+    python -m src.eval.analyze_bad_cases --pred outputs/preds_llm.jsonl --model llm --top 10
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
 from collections import Counter, defaultdict
@@ -29,6 +35,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .evaluate import (
+    OUTPUTS_DIR,
     REPO_ROOT,
     STANDARD_LABELS,
     load_predictions,
@@ -42,18 +49,32 @@ if hasattr(sys.stderr, "reconfigure"):
 
 LOG_DIR = REPO_ROOT / "logs"
 
-# 中文否定词（单字为主，覆盖常见否定表达；"不"亦见于"不错/不过"等，属启发式噪声，可迭代）
-NEGATION_WORDS = {"不", "没", "无", "非", "别", "莫", "未", "否", "勿", "毫无", "绝非", "并不"}
+# 转折/让步连词：前后情感反转的典型信号（如「虽然便宜但是很差」）
+# 注意：单字「可」过于噪声（会误匹配「可能/可以」），故仅保留「可是」
+TURN_WORDS = [
+    "但是", "但", "却", "然而", "不过", "只是", "可是", "偏偏",
+    "谁知", "结果", "反而", "虽然", "尽管", "固然", "即使", "即便", "哪怕",
+]
 
-# 文本长度阈值（字符数），默认值；按本测试集长度分布（min=20, p5≈31, 中位=79,
-# p95≈220, mean≈108）设定，可用 --short-threshold / --long-threshold 覆盖
+# 反语/讽刺弱标记：口吻特殊、疑似按字面反着说（弱启发式，最终以人工复核为准）
+SARCASM_WORDS = [
+    "呵呵", "哈哈", "居然", "竟然", "号称", "所谓", "敢情", "不愧是",
+    "多谢", "佩服", "好一个", "还真是", "真行", "真有", "神了",
+]
+
+# 中文否定词（单字为主；「不」亦见于「不错/不过」等，属启发式噪声，可迭代）
+NEGATION_WORDS = ["不", "没", "无", "非", "别", "莫", "未", "否", "勿", "毫无", "绝不", "并不"]
+
+# 文本长度阈值（字符数）；按本测试集长度分布（min=20, p5≈31, 中位=79, p95≈220）
 DEFAULT_SHORT_THRESHOLD = 30
 DEFAULT_LONG_THRESHOLD = 200
-# 展示坏例时截断长度，避免日志过长
+# 展示坏例时截断长度
 TRUNCATE = 60
 
 CATEGORY_LABELS = {
-    "negation": "否定词反转",
+    "contrast": "转折反转",
+    "sarcasm": "疑似讽刺/反语",
+    "negation": "否定词误判",
     "long_text": "长文本混淆",
     "short_text": "短文本信息不足",
     "other": "其他",
@@ -77,27 +98,68 @@ def setup_logger() -> logging.Logger:
     return logger
 
 
-def _has_negation(text: str) -> bool:
-    return any(w in text for w in NEGATION_WORDS)
+def _match(word_list: list, text: str):
+    """返回 text 中命中的第一个词，未命中返回 None。"""
+    for w in word_list:
+        if w in text:
+            return w
+    return None
 
 
-def _categorize(text: str, short_threshold: int, long_threshold: int) -> str:
+def _categorize(text: str, short_threshold: int, long_threshold: int) -> tuple:
+    """返回 (category, matched_word)，按优先级归类。"""
     length = len(text)
-    if _has_negation(text):
-        return "negation"
+
+    turn = _match(TURN_WORDS, text)
+    if turn:
+        return "contrast", turn
+
+    sarc = _match(SARCASM_WORDS, text)
+    if sarc:
+        return "sarcasm", sarc
+
+    neg = _match(NEGATION_WORDS, text)
+    if neg:
+        return "negation", neg
+
     if length >= long_threshold:
-        return "long_text"
+        return "long_text", str(length)
     if length <= short_threshold:
-        return "short_text"
-    return "other"
+        return "short_text", str(length)
+    return "other", ""
+
+
+def _make_reason(category: str, matched: str, length: int) -> str:
+    """根据类别生成错误机理归因说明。"""
+    if category == "contrast":
+        return f"含转折连词「{matched}」，前后情感反转，模型未能捕捉转折语义"
+    if category == "sarcasm":
+        return f"含反语标记「{matched}」，疑似讽刺/口吻特殊，模型按字面理解"
+    if category == "negation":
+        return f"含否定词「{matched}」，模型未能正确处理否定范围"
+    if category == "long_text":
+        return f"文本过长（{length}字），上下文信息冗余导致混淆"
+    if category == "short_text":
+        return f"文本过短（{length}字），情感信号不足"
+    return "无明显特征，疑似边界模糊或标注歧义"
 
 
 def _truncate(text: str, limit: int = TRUNCATE) -> str:
     return text if len(text) <= limit else text[:limit] + "…"
 
 
-def analyze(preds: list, gold: dict, short_threshold: int, long_threshold: int, top: int) -> dict:
-    """找出误判样本并按类别归类，返回统计结果。"""
+def _infer_model(pred_path: Path) -> str:
+    """从预测文件名推断模型名：preds_baseline -> baseline，preds_llm -> llm。"""
+    name = pred_path.stem.lower()
+    if "baseline" in name:
+        return "baseline"
+    if "llm" in name:
+        return "llm"
+    return name.replace("preds_", "") or name
+
+
+def analyze(preds: list, gold: dict, short_threshold: int, long_threshold: int) -> dict:
+    """找出误判样本并归类，返回含明细的统计结果。"""
     errors = []
     for p in preds:
         text = p["text"]
@@ -107,13 +169,16 @@ def analyze(preds: list, gold: dict, short_threshold: int, long_threshold: int, 
         pred_label = p["pred_label"]
         if pred_label == true_label:
             continue
+        category, matched = _categorize(text, short_threshold, long_threshold)
         errors.append(
             {
                 "text": text,
-                "gold": true_label,
-                "pred": pred_label,
+                "gold_label": true_label,
+                "pred_label": pred_label,
                 "len": len(text),
-                "category": _categorize(text, short_threshold, long_threshold),
+                "category": category,
+                "matched": matched,
+                "reason": _make_reason(category, matched, len(text)),
             }
         )
 
@@ -121,23 +186,18 @@ def analyze(preds: list, gold: dict, short_threshold: int, long_threshold: int, 
     for e in errors:
         by_category[e["category"]].append(e)
 
-    # 错误方向统计：gold -> pred
-    direction = Counter((e["gold"], e["pred"]) for e in errors)
-
-    # 误判样本长度分布
-    lengths = [e["len"] for e in errors]
+    direction = Counter((e["gold_label"], e["pred_label"]) for e in errors)
 
     return {
         "total_preds": len([p for p in preds if p["text"] in gold]),
         "n_errors": len(errors),
         "by_category": by_category,
         "direction": direction,
-        "lengths": lengths,
-        "top": top,
+        "errors": errors,
     }
 
 
-def report(logger: logging.Logger, result: dict) -> None:
+def report(logger: logging.Logger, result: dict, top: int) -> None:
     total = result["total_preds"]
     n_err = result["n_errors"]
     err_rate = n_err / total if total else 0.0
@@ -150,11 +210,6 @@ def report(logger: logging.Logger, result: dict) -> None:
     if not n_err:
         logger.info("无误判样本，跳过坏例归类")
         return
-
-    if result["lengths"]:
-        avg = sum(result["lengths"]) / len(result["lengths"])
-        logger.info(f"误判样本长度：min={min(result['lengths'])} "
-                    f"max={max(result['lengths'])} avg={avg:.1f}")
 
     logger.info("-" * 60)
     logger.info("错误方向分布（真实 -> 预测）：")
@@ -173,20 +228,67 @@ def report(logger: logging.Logger, result: dict) -> None:
         if not samples:
             continue
         logger.info("-" * 60)
-        logger.info(f"【{label}】代表性坏例（前 {min(result['top'], len(samples))} 条）：")
-        for e in samples[: result["top"]]:
-            logger.info(f"  [{e['gold']} -> {e['pred']}] (len={e['len']}) {_truncate(e['text'])}")
+        logger.info(f"【{label}】代表性坏例（前 {min(top, len(samples))} 条）：")
+        for e in samples[:top]:
+            logger.info(f"  [{e['gold_label']} -> {e['pred_label']}] (len={e['len']}) {_truncate(e['text'])}")
+            logger.info(f"      归因：{e['reason']}")
 
     logger.info("=" * 60)
 
 
+def save_json(result: dict, model: str, pred_path: Path, top: int) -> Path:
+    """将坏例结果保存为结构化 JSON，供报告 §6 引用。"""
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = OUTPUTS_DIR / f"bad_cases_{model}.json"
+
+    examples = [
+        {
+            "text": e["text"],
+            "gold_label": e["gold_label"],
+            "pred_label": e["pred_label"],
+            "category": e["category"],
+            "category_label": CATEGORY_LABELS[e["category"]],
+            "reason": e["reason"],
+        }
+        for e in result["errors"]
+    ]
+
+    payload = {
+        "model": model,
+        "source": pred_path.name,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "labels": STANDARD_LABELS,
+        "total_samples": result["total_preds"],
+        "total_errors": result["n_errors"],
+        "error_rate": round(result["n_errors"] / result["total_preds"], 4) if result["total_preds"] else 0.0,
+        "error_direction": {
+            f"{g}->{p}": c for (g, p), c in result["direction"].most_common()
+        },
+        "categories": {
+            cat: {
+                "label": CATEGORY_LABELS[cat],
+                "count": len(result["by_category"].get(cat, [])),
+            }
+            for cat in CATEGORY_LABELS
+        },
+        "examples": examples,
+    }
+
+    with out_path.open("w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    return out_path
+
+
 def main():
     parser = argparse.ArgumentParser(description="坏例分析与失败归因脚本（成员 C）")
-    parser.add_argument("--pred", required=True, type=str, help="预测文件路径，如 outputs/preds_baseline.jsonl")
+    parser.add_argument("--pred", required=True, type=str,
+                        help="预测文件路径，如 outputs/preds_baseline.jsonl")
+    parser.add_argument("--model", type=str, default=None,
+                        help="模型名，用于命名输出文件（默认从文件名推断）")
     parser.add_argument("--short-threshold", type=int, default=DEFAULT_SHORT_THRESHOLD,
-                        help=f"短文本阈值（字符数，默认 {DEFAULT_SHORT_THRESHOLD}）")
+                        help=f"短文本阈值（默认 {DEFAULT_SHORT_THRESHOLD}）")
     parser.add_argument("--long-threshold", type=int, default=DEFAULT_LONG_THRESHOLD,
-                        help=f"长文本阈值（字符数，默认 {DEFAULT_LONG_THRESHOLD}）")
+                        help=f"长文本阈值（默认 {DEFAULT_LONG_THRESHOLD}）")
     parser.add_argument("--top", type=int, default=5, help="每类展示的坏例条数（默认 5）")
     args = parser.parse_args()
 
@@ -200,12 +302,16 @@ def main():
     if not pred_path.exists():
         raise FileNotFoundError(f"预测文件不存在：{pred_path.as_posix()}")
 
+    model = args.model or _infer_model(pred_path)
     gold = load_test_gold()
     preds = load_predictions(pred_path)
-    logger.info(f"读取预测文件 {pred_path.as_posix()}：{len(preds)} 条")
+    logger.info(f"读取预测文件 {pred_path.as_posix()}：{len(preds)} 条；模型：{model}")
 
-    result = analyze(preds, gold, args.short_threshold, args.long_threshold, args.top)
-    report(logger, result)
+    result = analyze(preds, gold, args.short_threshold, args.long_threshold)
+    report(logger, result, args.top)
+
+    out_path = save_json(result, model, pred_path, args.top)
+    logger.info(f"坏例结构化结果已保存：{out_path.as_posix()}（共 {result['n_errors']} 条）")
     logger.info("坏例分析完成")
 
 
