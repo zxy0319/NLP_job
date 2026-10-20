@@ -280,7 +280,8 @@ def run_compare(logger: logging.Logger) -> list:
 def main():
     parser = argparse.ArgumentParser(description="统一评测脚本（成员 C）")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--pred", type=str, help="评测单个预测文件，如 outputs/preds_baseline.jsonl")
+    group.add_argument("--pred", "--pred_path", dest="pred", type=str,
+                       help="评测单个预测文件，如 outputs/preds_baseline.jsonl")
     group.add_argument("--compare", action="store_true", help="自动对比 outputs/ 下所有 preds_*.jsonl")
     group.add_argument("--selfcheck", action="store_true", help="用真实标签验证评测流水线")
     parser.add_argument("--plot", action="store_true", help="为 --pred 生成混淆矩阵 PNG 图（存到 outputs/）")
