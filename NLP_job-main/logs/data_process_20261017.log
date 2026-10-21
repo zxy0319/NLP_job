@@ -1,0 +1,7 @@
+2026-10-17 18:57:26,489 [INFO] Initialized data processing with random seed: 42
+2026-10-17 18:57:26,491 [INFO] Reading raw data from: data/raw/dataset.jsonl
+2026-10-17 18:57:26,557 [INFO] Total valid samples after cleaning: 5000
+2026-10-17 18:57:26,739 [INFO] Split [train.jsonl] written: 4000 samples | Avg text len: 116.83
+2026-10-17 18:57:26,763 [INFO] Split [dev.jsonl] written: 500 samples | Avg text len: 117.50
+2026-10-17 18:57:26,788 [INFO] Split [test.jsonl] written: 500 samples | Avg text len: 117.50
+2026-10-17 18:57:26,789 [INFO] Data pipeline finished successfully. Files saved to data/processed
