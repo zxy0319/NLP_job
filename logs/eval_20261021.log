@@ -1,0 +1,24 @@
+2026-10-21 13:50:02,002 [INFO] Log file: D:/my_nlp_project/logs/eval_20261021.log
+2026-10-21 13:50:02,002 [INFO] 统一评测脚本启动
+2026-10-21 13:50:02,002 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 13:50:02,022 [INFO] 读取预测文件 outputs/preds_baseline.jsonl：992 条
+2026-10-21 13:50:02,023 [INFO] 
+===== 评测报告：preds_baseline.jsonl =====
+样本数：992
+Accuracy     : 0.8730
+Macro-Precision: 0.8726
+Macro-Recall   : 0.8719
+Macro-F1       : 0.8722
+----------------------------------------
+label            P       R      F1   support
+positive    0.8773  0.8872  0.8822       532
+negative    0.8678  0.8565  0.8621       460
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive           472          60
+negative            66         394
+----------------------------------------
+延迟统计：mean=0.27ms  min=0.27ms  max=0.27ms  (n=992)
+2026-10-21 13:50:06,781 [INFO] 混淆矩阵图已保存：D:/my_nlp_project/outputs/confusion_matrix_preds_baseline.png
+2026-10-21 13:50:06,783 [INFO] 评测完成
