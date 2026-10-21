@@ -86,7 +86,8 @@ class ProtocolHandler(BaseHTTPRequestHandler):
         label = "positive" if "满意" in query else "negative"
         result = {"choices": [{"message": {"content": label}, "finish_reason": "stop"}]}
         if not type(self).omit_usage:
-            result["usage"] = {"prompt_tokens": 10, "completion_tokens": 2}
+            result["usage"] = {"prompt_tokens": 10, "completion_tokens": 2,
+                               "prompt_cache_hit_tokens": 8, "prompt_cache_miss_tokens": 2}
         if type(self).response_override is not None:
             result = type(self).response_override
         self.wfile.write(json.dumps(result).encode())
@@ -142,6 +143,47 @@ class IntegrationTests(unittest.TestCase):
         self.assertIsNone(result["prompt_tokens"])
         self.assertIsNone(result["known_cost"])
         self.assertEqual(result["usage_missing_attempts"], 1)
+
+    def test_deepseek_non_thinking_and_cache_pricing(self):
+        with patch.dict(os.environ, {"LLM_API_KEY": "unit-test-only"}):
+            client = LLMClient(ClientConfig(base_url=self.url, model="protocol-test",
+                                           thinking="disabled", input_price=2, output_price=8,
+                                           cache_input_price=0.04))
+        result = client.complete(build_messages("满意", []))
+        self.assertEqual(ProtocolHandler.calls[0][1]["thinking"], {"type": "disabled"})
+        self.assertEqual(result["prompt_cache_hit_tokens_known"], 8)
+        self.assertEqual(result["prompt_cache_miss_tokens_known"], 2)
+        self.assertAlmostEqual(result["known_cost"], 0.00002032)
+
+    def test_missing_or_invalid_cache_counts_are_not_claimed_complete(self):
+        for usage in ({"prompt_tokens": 10, "completion_tokens": 2},
+                      {"prompt_tokens": 10, "completion_tokens": 2,
+                       "prompt_cache_hit_tokens": 100, "prompt_cache_miss_tokens": 0}):
+            with self.subTest(usage=usage):
+                ProtocolHandler.response_override = {
+                    "choices": [{"message": {"content": "positive"}, "finish_reason": "stop"}], "usage": usage}
+                with patch.dict(os.environ, {"LLM_API_KEY": "unit-test-only"}):
+                    client = LLMClient(ClientConfig(base_url=self.url, model="protocol-test",
+                                                   input_price=2, output_price=8, cache_input_price=0.04))
+                result = client.complete(build_messages("满意", []))
+                self.assertFalse(result["cost_complete"])
+                self.assertEqual(result["cache_usage_missing_attempts"], 1)
+                self.assertAlmostEqual(result["known_cost"], 0.000036)
+
+    def test_parallel_predictions_keep_order_and_exact_usage_on_resume(self):
+        rows = [{"text": f"{'满意' if i % 2 else '很糟'}-{i}",
+                 "label": "positive" if i % 2 else "negative"} for i in range(25)]
+        with tempfile.TemporaryDirectory() as d:
+            checkpoint = Path(d)/"parallel.jsonl"
+            client = self.client()
+            result = run_experiment(rows, [], client, checkpoint, logging.getLogger("test"), workers=4)
+            self.assertEqual([p["text"] for p in result["predictions"]], [r["text"] for r in rows])
+            self.assertEqual(result["metrics"]["accuracy"], 1)
+            self.assertEqual(result["usage"]["http_attempts"], 25)
+            self.assertEqual(client.stats["prompt_tokens_known"], 250)
+            recovered = run_experiment(rows, [], client, checkpoint, logging.getLogger("test"), workers=3)
+            self.assertEqual(recovered["new_http_attempts"], 0)
+            self.assertEqual(recovered["usage"], result["usage"])
 
     def test_malformed_api_structure_is_retried_with_safe_error(self):
         ProtocolHandler.response_override = []
@@ -214,6 +256,10 @@ class IntegrationTests(unittest.TestCase):
             self.assertEqual(summary["selection_split"], "dev")
             self.assertEqual(summary["selected_strategy"], "zeroshot")
             self.assertEqual(summary["current_process"]["http_attempts"], 12)
+            self.assertEqual(summary["experiment_totals"]["logical_predictions"], 12)
+            self.assertEqual(summary["experiment_totals"]["prompt_tokens_known"], 120)
+            self.assertEqual(summary["experiment_totals"]["completion_tokens_known"], 24)
+            self.assertAlmostEqual(summary["experiment_totals"]["known_cost"], 0.000336)
             self.assertEqual(len((root/"out"/"preds_llm.jsonl").read_text(encoding="utf-8").splitlines()), 2)
             self.assertEqual(before, test.read_bytes())
             logs = "".join(p.read_text(encoding="utf-8") for p in (root/"logs").glob("*.log"))

@@ -1,0 +1,339 @@
+{
+  "status": "completed",
+  "run_id": "f7888fc0f0d3ea8b720b",
+  "selection_split": "dev",
+  "selected_strategy": "fewshot",
+  "input_check": {
+    "status": "validated",
+    "seed": 42,
+    "dev_sha256": "e83b760ebc4dd7a31368533bb18fa3ef2728c67df2cb92c040c967cbb7272e13",
+    "test_sha256": "a75f906b15fb49698b253a6596efd3907e07e10572cf7c36bbd22bd1a13dd9a7",
+    "dev_samples": 990,
+    "test_samples": 992,
+    "test_label_counts": {
+      "negative": 460,
+      "positive": 532
+    },
+    "fewshot_examples": [
+      {
+        "text": "之前用的是X60.只喜欢小黑。很轻，几乎没有噪音，连硬盘转的声音都几乎听不见。配置主流，用相关软件测试了，cpu温度在今天这么热的天气也只有39。做工很精细，外表没的说，让人有一种爱不释手的感觉。确实是一款难得的笔记本。",
+        "label": "positive"
+      },
+      {
+        "text": "于丹所说的很多内容都在误导大众,看看网上的很多评论就知道了,个人觉得不值得去看!!",
+        "label": "negative"
+      },
+      {
+        "text": "价格便宜，性能强，设计简约大方，屏幕很舒服，总之总之 我买过4个本本 这个绝对是性价比最高的，超级高！！！！！",
+        "label": "positive"
+      }
+    ],
+    "dev_validation_samples": 100,
+    "planned_logical_calls": 2184,
+    "max_http_attempts": 6552,
+    "selection_split": "dev",
+    "predictions_generated": true
+  },
+  "config": {
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "temperature": 0.0,
+    "max_tokens": 64,
+    "timeout": 60,
+    "max_retries": 2,
+    "retry_delay": 1.0,
+    "input_price": 2.0,
+    "output_price": 8.0,
+    "currency": "CNY",
+    "seed": 42,
+    "send_seed": false,
+    "thinking": "disabled",
+    "cache_input_price": 0.04
+  },
+  "results": {
+    "dev": {
+      "zeroshot": {
+        "metrics": {
+          "n": 100,
+          "accuracy": 0.92,
+          "macro_precision": 0.9261363636363636,
+          "macro_recall": 0.9199999999999999,
+          "macro_f1": 0.9197109594540345,
+          "per_class": {
+            "positive": {
+              "tp": 43,
+              "fp": 1,
+              "fn": 7,
+              "support": 50,
+              "precision": 0.9772727272727273,
+              "recall": 0.86,
+              "f1": 0.9148936170212766
+            },
+            "negative": {
+              "tp": 49,
+              "fp": 7,
+              "fn": 1,
+              "support": 50,
+              "precision": 0.875,
+              "recall": 0.98,
+              "f1": 0.9245283018867924
+            }
+          },
+          "confusion_matrix": {
+            "positive": {
+              "positive": 43,
+              "negative": 7
+            },
+            "negative": {
+              "positive": 1,
+              "negative": 49
+            }
+          },
+          "labels": [
+            "positive",
+            "negative"
+          ]
+        },
+        "samples": 100,
+        "cached_samples": 0,
+        "new_http_attempts": 100,
+        "mean_latency_ms": 818.41761,
+        "response_models": [
+          "deepseek-flash"
+        ],
+        "usage": {
+          "http_attempts": 100,
+          "prompt_tokens_known": 15976,
+          "completion_tokens_known": 100,
+          "usage_missing_attempts": 0,
+          "prompt_cache_hit_tokens_known": 0,
+          "prompt_cache_miss_tokens_known": 15976,
+          "cache_usage_missing_attempts": 0,
+          "known_cost": 0.032752,
+          "cost_complete": true,
+          "currency": "CNY"
+        }
+      },
+      "fewshot": {
+        "metrics": {
+          "n": 100,
+          "accuracy": 0.94,
+          "macro_precision": 0.9464285714285714,
+          "macro_recall": 0.94,
+          "macro_f1": 0.939783219590526,
+          "per_class": {
+            "positive": {
+              "tp": 44,
+              "fp": 0,
+              "fn": 6,
+              "support": 50,
+              "precision": 1.0,
+              "recall": 0.88,
+              "f1": 0.9361702127659575
+            },
+            "negative": {
+              "tp": 50,
+              "fp": 6,
+              "fn": 0,
+              "support": 50,
+              "precision": 0.8928571428571429,
+              "recall": 1.0,
+              "f1": 0.9433962264150945
+            }
+          },
+          "confusion_matrix": {
+            "positive": {
+              "positive": 44,
+              "negative": 6
+            },
+            "negative": {
+              "positive": 0,
+              "negative": 50
+            }
+          },
+          "labels": [
+            "positive",
+            "negative"
+          ]
+        },
+        "samples": 100,
+        "cached_samples": 0,
+        "new_http_attempts": 100,
+        "mean_latency_ms": 840.46109,
+        "response_models": [
+          "deepseek-flash"
+        ],
+        "usage": {
+          "http_attempts": 100,
+          "prompt_tokens_known": 32176,
+          "completion_tokens_known": 100,
+          "usage_missing_attempts": 0,
+          "prompt_cache_hit_tokens_known": 0,
+          "prompt_cache_miss_tokens_known": 32176,
+          "cache_usage_missing_attempts": 0,
+          "known_cost": 0.065152,
+          "cost_complete": true,
+          "currency": "CNY"
+        }
+      }
+    },
+    "test": {
+      "zeroshot": {
+        "metrics": {
+          "n": 992,
+          "accuracy": 0.9082661290322581,
+          "macro_precision": 0.9092722503507595,
+          "macro_recall": 0.9112373324615888,
+          "macro_f1": 0.9082078298704851,
+          "per_class": {
+            "positive": {
+              "tp": 463,
+              "fp": 22,
+              "fn": 69,
+              "support": 532,
+              "precision": 0.954639175257732,
+              "recall": 0.8703007518796992,
+              "f1": 0.9105211406096362
+            },
+            "negative": {
+              "tp": 438,
+              "fp": 69,
+              "fn": 22,
+              "support": 460,
+              "precision": 0.863905325443787,
+              "recall": 0.9521739130434783,
+              "f1": 0.905894519131334
+            }
+          },
+          "confusion_matrix": {
+            "positive": {
+              "positive": 463,
+              "negative": 69
+            },
+            "negative": {
+              "positive": 22,
+              "negative": 438
+            }
+          },
+          "labels": [
+            "positive",
+            "negative"
+          ]
+        },
+        "samples": 992,
+        "cached_samples": 0,
+        "new_http_attempts": 992,
+        "mean_latency_ms": 755.966714717742,
+        "response_models": [
+          "deepseek-flash"
+        ],
+        "usage": {
+          "http_attempts": 992,
+          "prompt_tokens_known": 151050,
+          "completion_tokens_known": 992,
+          "usage_missing_attempts": 0,
+          "prompt_cache_hit_tokens_known": 0,
+          "prompt_cache_miss_tokens_known": 151050,
+          "cache_usage_missing_attempts": 0,
+          "known_cost": 0.310036,
+          "cost_complete": true,
+          "currency": "CNY"
+        }
+      },
+      "fewshot": {
+        "metrics": {
+          "n": 992,
+          "accuracy": 0.9203629032258065,
+          "macro_precision": 0.9200397575521055,
+          "macro_recall": 0.9222213141549526,
+          "macro_f1": 0.9202266325862724,
+          "per_class": {
+            "positive": {
+              "tp": 477,
+              "fp": 24,
+              "fn": 55,
+              "support": 532,
+              "precision": 0.9520958083832335,
+              "recall": 0.8966165413533834,
+              "f1": 0.9235237173281704
+            },
+            "negative": {
+              "tp": 436,
+              "fp": 55,
+              "fn": 24,
+              "support": 460,
+              "precision": 0.8879837067209776,
+              "recall": 0.9478260869565217,
+              "f1": 0.9169295478443743
+            }
+          },
+          "confusion_matrix": {
+            "positive": {
+              "positive": 477,
+              "negative": 55
+            },
+            "negative": {
+              "positive": 24,
+              "negative": 436
+            }
+          },
+          "labels": [
+            "positive",
+            "negative"
+          ]
+        },
+        "samples": 992,
+        "cached_samples": 0,
+        "new_http_attempts": 992,
+        "mean_latency_ms": 770.8937842741935,
+        "response_models": [
+          "deepseek-flash"
+        ],
+        "usage": {
+          "http_attempts": 992,
+          "prompt_tokens_known": 311754,
+          "completion_tokens_known": 992,
+          "usage_missing_attempts": 0,
+          "prompt_cache_hit_tokens_known": 0,
+          "prompt_cache_miss_tokens_known": 311754,
+          "cache_usage_missing_attempts": 0,
+          "known_cost": 0.631444,
+          "cost_complete": true,
+          "currency": "CNY"
+        }
+      }
+    }
+  },
+  "current_process": {
+    "http_attempts": 2184,
+    "prompt_tokens_known": 510956,
+    "completion_tokens_known": 2184,
+    "usage_missing_attempts": 0,
+    "prompt_cache_hit_tokens_known": 0,
+    "prompt_cache_miss_tokens_known": 510956,
+    "cache_usage_missing_attempts": 0,
+    "http_latency_ms_total": 1680559.1213999996,
+    "mean_http_latency_ms": 769.486777197802,
+    "known_cost": 1.039384,
+    "cost_complete": true,
+    "currency": "CNY"
+  },
+  "experiment_totals": {
+    "http_attempts": 2184,
+    "prompt_tokens_known": 510956,
+    "completion_tokens_known": 2184,
+    "usage_missing_attempts": 0,
+    "prompt_cache_hit_tokens_known": 0,
+    "prompt_cache_miss_tokens_known": 510956,
+    "cache_usage_missing_attempts": 0,
+    "known_cost": 1.039384,
+    "cost_complete": true,
+    "currency": "CNY",
+    "logical_predictions": 2184,
+    "mean_latency_ms": 769.4750389194138
+  },
+  "workers": 8,
+  "completed_at": "2026-10-21T14:58:27.866902+08:00",
+  "wall_seconds": 283.7954829,
+  "cost_note": "按配置单价及API返回的输入、输出、缓存命中Token估算；单价须与运行时段相符。未知usage、历史失败进程及其他计费项以服务商账单为准。"
+}

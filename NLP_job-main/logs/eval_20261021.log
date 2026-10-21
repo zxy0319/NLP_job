@@ -1,0 +1,24 @@
+2026-10-21 14:59:30,989 [INFO] Log file: C:/Users/11067/Desktop/NLP_job-main/logs/eval_20261021.log
+2026-10-21 14:59:30,989 [INFO] 统一评测脚本启动
+2026-10-21 14:59:30,989 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 14:59:31,007 [INFO] 读取预测文件 outputs/preds_llm.jsonl：992 条
+2026-10-21 14:59:31,007 [INFO] 
+===== 评测报告：preds_llm.jsonl =====
+样本数：992
+Accuracy     : 0.9204
+Macro-Precision: 0.9200
+Macro-Recall   : 0.9222
+Macro-F1       : 0.9202
+----------------------------------------
+label            P       R      F1   support
+positive    0.9521  0.8966  0.9235       532
+negative    0.8880  0.9478  0.9169       460
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive           477          55
+negative            24         436
+----------------------------------------
+延迟统计：mean=770.89ms  min=346.18ms  max=2333.28ms  (n=992)
+2026-10-21 14:59:31,007 [WARNING] 未安装 matplotlib，跳过出图：No module named 'matplotlib'
+2026-10-21 14:59:31,007 [INFO] 评测完成

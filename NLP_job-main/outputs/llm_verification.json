@@ -1,0 +1,37 @@
+{
+  "status": "passed",
+  "checks": [
+    "frozen_train_dev_test_unchanged",
+    "exact_prediction_schema",
+    "all_test_rows_in_original_order",
+    "independent_accuracy_macro_f1",
+    "dev_only_model_selection",
+    "main_prediction_equals_selected",
+    "token_and_cost_reconciliation",
+    "checkpoint_counts",
+    "runtime_log_call_count",
+    "no_api_key_in_delivery_files"
+  ],
+  "selected_strategy": "fewshot",
+  "test_results": {
+    "zeroshot": {
+      "rows": 992,
+      "accuracy": 0.9082661290322581,
+      "macro_f1": 0.9082078298704851,
+      "sha256": "abf59ae317a2951342c8d84ffc4332d252668689f7a8afad3bc52694fb79784a"
+    },
+    "fewshot": {
+      "rows": 992,
+      "accuracy": 0.9203629032258065,
+      "macro_f1": 0.9202266325862724,
+      "sha256": "2f19e4a5d1a6dbd5f7f1bd8a5646267aa4ead6f12ef6359cf633e04fb33db3bb"
+    }
+  },
+  "http_attempts": 2184,
+  "known_cost_cny": 1.039384,
+  "input_sha256": {
+    "dev": "e83b760ebc4dd7a31368533bb18fa3ef2728c67df2cb92c040c967cbb7272e13",
+    "test": "a75f906b15fb49698b253a6596efd3907e07e10572cf7c36bbd22bd1a13dd9a7",
+    "train": "ba7f6dcfcdeff8a2964e582c118e7e49d908f40c1b1648437eebb455957b740e"
+  }
+}

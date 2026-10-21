@@ -1,6 +1,7 @@
 """B 成员运行入口：开发集选提示、冻结测试集比较、统计成本和断点续跑。"""
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict
 from datetime import datetime
 import hashlib
@@ -15,7 +16,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.eval.metrics import compute_metrics
-from src.llm.client import ClientConfig, LLMClient
+from src.llm.client import ClientConfig, LLMClient, USAGE_COUNTERS, usage_cost
 from src.llm.prompt_templates import LABELS, PROMPT_VERSION, build_messages, split_dev
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -59,8 +60,10 @@ def atomic_json(path: Path, value, jsonl: bool = False):
 
 
 def run_experiment(rows: list, examples: list, client: LLMClient, checkpoint: Path,
-                   logger: logging.Logger) -> dict:
+                   logger: logging.Logger, workers: int = 1) -> dict:
     """checkpoint 带数据、提示与配置指纹；恢复已完成请求，不复用不相符缓存。"""
+    if workers < 1:
+        raise ValueError("workers 必须大于 0")
     identity = digest({"rows": rows, "examples": examples, "config": asdict(client.config), "prompt": PROMPT_VERSION})
     checkpoint.parent.mkdir(parents=True, exist_ok=True)
     completed = []
@@ -87,29 +90,28 @@ def run_experiment(rows: list, examples: list, client: LLMClient, checkpoint: Pa
     cached = len(completed)
     new_start = client.stats["http_attempts"]
     logger.info("实验 samples=%d cached=%d shots=%d", len(rows), cached, len(examples))
-    with checkpoint.open("a", encoding="utf-8", newline="\n") as stream:
-        for i in range(cached, len(rows)):
-            # API 只接收 text；gold 标签仅用于本地评测。
-            result = client.complete(build_messages(rows[i]["text"], examples))
-            stream.write(json.dumps({"identity": identity, "index": i, "result": result}, ensure_ascii=False)+"\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-            completed.append(result)
-            if (i+1) % 10 == 0 or i+1 == len(rows):
-                logger.info("进度 %d/%d", i+1, len(rows))
+    with checkpoint.open("a", encoding="utf-8", newline="\n") as stream, ThreadPoolExecutor(max_workers=workers) as pool:
+        # 分批提交，失败时最多只剩一批在途请求；map 保持原始顺序。
+        for offset in range(cached, len(rows), workers):
+            batch = rows[offset:offset+workers]
+            pending = pool.map(lambda row: client.complete(build_messages(row["text"], examples)), batch)
+            for i, result in enumerate(pending, offset):
+                stream.write(json.dumps({"identity": identity, "index": i, "result": result}, ensure_ascii=False)+"\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+                completed.append(result)
+                if (i+1) % 10 == 0 or i+1 == len(rows):
+                    logger.info("进度 %d/%d", i+1, len(rows))
     predictions = [{"text": row["text"], "gold_label": row["label"],
                     "pred_label": result["pred_label"], "latency_ms": result["latency_ms"]}
                    for row, result in zip(rows, completed)]
-    stats = {key: sum(r[key] for r in completed) for key in
-             ("http_attempts", "prompt_tokens_known", "completion_tokens_known", "usage_missing_attempts")}
-    known_costs = [r["known_cost"] for r in completed if r["known_cost"] is not None]
-    stats.update({"known_cost": sum(known_costs) if known_costs else None,
-                  "cost_complete": client.config.input_price is not None and stats["usage_missing_attempts"] == 0,
-                  "currency": client.config.currency})
+    stats = {key: sum(r[key] for r in completed) for key in USAGE_COUNTERS}
+    stats.update(usage_cost(stats, client.config))
     return {"metrics": compute_metrics([r["label"] for r in rows], [r["pred_label"] for r in completed], LABELS),
             "predictions": predictions, "samples": len(rows), "cached_samples": cached,
             "new_http_attempts": client.stats["http_attempts"]-new_start,
-            "mean_latency_ms": sum(r["latency_ms"] for r in completed)/len(rows), "usage": stats}
+            "mean_latency_ms": sum(r["latency_ms"] for r in completed)/len(rows),
+            "response_models": sorted({r.get("response_model", client.config.model) for r in completed}), "usage": stats}
 
 
 def comparison(results: dict) -> str:
@@ -146,6 +148,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--input-price", type=float, help="每百万输入 Token 价格；不含缓存折扣等")
     p.add_argument("--output-price", type=float, help="每百万输出 Token 价格")
     p.add_argument("--currency", choices=["CNY", "USD"], default="CNY")
+    p.add_argument("--thinking", choices=["enabled", "disabled"], help="DeepSeek 分类推荐 disabled；其他服务默认不传此字段")
+    p.add_argument("--cache-input-price", type=float, help="每百万缓存命中输入 Token 单价；input-price 是缓存未命中价")
+    p.add_argument("--workers", type=int, default=8, help="并发请求数；输出仍按测试集原顺序写入")
     p.add_argument("--preview", action="store_true", help="不联网，只验证数据和生成调用规模清单，不生成预测")
     return p
 
@@ -170,6 +175,8 @@ def main(argv=None) -> int:
     client = None
     try:
         logger.info("mode=%s seed=%d prompt=%s", "preview_no_inference" if args.preview else "api", args.seed, PROMPT_VERSION)
+        if args.workers < 1:
+            raise ValueError("workers 必须大于 0")
         if args.dev.resolve() == args.test.resolve():
             raise ValueError("dev 与 test 不能是同一文件")
         dev_hash = hashlib.sha256(args.dev.read_bytes()).hexdigest()
@@ -201,7 +208,8 @@ def main(argv=None) -> int:
         config = ClientConfig(base_url=args.base_url, model=args.model, temperature=args.temperature,
                               max_tokens=args.max_tokens, timeout=args.timeout, max_retries=args.max_retries,
                               input_price=args.input_price, output_price=args.output_price, currency=args.currency,
-                              seed=args.seed, send_seed=args.send_seed)
+                              seed=args.seed, send_seed=args.send_seed,
+                              thinking=args.thinking, cache_input_price=args.cache_input_price)
         client = LLMClient(config)
         logger.info("模型/API配置（不含 Key）：%s", json.dumps(asdict(config), ensure_ascii=False))
         if config.input_price is None:
@@ -214,7 +222,7 @@ def main(argv=None) -> int:
         for strategy in strategies:
             logger.info("开发集 strategy=%s", strategy)
             results["dev"][strategy] = run_experiment(validation, examples if strategy == "fewshot" else [], client,
-                                                     cache_dir/f"dev_{strategy}.jsonl", logger)
+                                                     cache_dir/f"dev_{strategy}.jsonl", logger, args.workers)
         # 只用 dev 的 Macro-F1 选主方案；同分比较 Accuracy，再同分选 zeroshot 节约提示成本。
         selected = max(strategies, key=lambda s: (results["dev"][s]["metrics"]["macro_f1"],
                                                   results["dev"][s]["metrics"]["accuracy"], s == "zeroshot"))
@@ -222,7 +230,7 @@ def main(argv=None) -> int:
         for strategy in strategies:
             logger.info("测试集 strategy=%s", strategy)
             results["test"][strategy] = run_experiment(test, examples if strategy == "fewshot" else [], client,
-                                                      cache_dir/f"test_{strategy}.jsonl", logger)
+                                                      cache_dir/f"test_{strategy}.jsonl", logger, args.workers)
         if hashlib.sha256(args.test.read_bytes()).hexdigest() != test_hash or hashlib.sha256(args.dev.read_bytes()).hexdigest() != dev_hash:
             raise ValueError("实验期间源数据发生变化，拒绝发布结果")
         for strategy in strategies:
@@ -234,21 +242,29 @@ def main(argv=None) -> int:
                 del result["predictions"]
         process = dict(client.stats)
         process["mean_http_latency_ms"] = process["http_latency_ms_total"]/process["http_attempts"] if process["http_attempts"] else None
-        process["known_cost"] = None if config.input_price is None else (
-            process["prompt_tokens_known"]*config.input_price + process["completion_tokens_known"]*config.output_price)/1_000_000
-        process["cost_complete"] = config.input_price is not None and process["usage_missing_attempts"] == 0
+        process.update(usage_cost(process, config))
+        experiments = [r for split in results.values() for r in split.values()]
+        totals = {key: sum(r["usage"][key] for r in experiments) for key in USAGE_COUNTERS}
+        totals.update(usage_cost(totals, config))
+        totals["logical_predictions"] = sum(r["samples"] for r in experiments)
+        totals["mean_latency_ms"] = sum(r["mean_latency_ms"]*r["samples"] for r in experiments)/totals["logical_predictions"]
         summary = {"status": "completed", "run_id": run_id, "selection_split": "dev", "selected_strategy": selected,
                    "input_check": input_check, "config": asdict(config), "results": results,
-                   "current_process": process, "wall_seconds": time.perf_counter()-start,
-                   "cost_note": "每百万输入/输出Token单价线性估算；未知usage的调用、缓存折扣及其他计费项以服务商账单为准。"}
+                   "current_process": process, "experiment_totals": totals,
+                   "workers": args.workers, "completed_at": datetime.now().astimezone().isoformat(),
+                   "wall_seconds": time.perf_counter()-start,
+                   "cost_note": "按配置单价及API返回的输入、输出、缓存命中Token估算；单价须与运行时段相符。未知usage、历史失败进程及其他计费项以服务商账单为准。"}
         summary["input_check"]["predictions_generated"] = True
         atomic_json(args.output_dir/"llm_summary.json", summary)
+        atomic_json(args.output_dir/"llm_input_check.json", summary["input_check"])
         report = args.output_dir/"llm_comparison.md"
         report.write_text(f"# B 成员大模型实验结果\n\n主方案：{selected}，根据开发集选定。\n\n{table}\n\n"
+                          f"全部实验统计（含已恢复的完成样本）：`{json.dumps(totals, ensure_ascii=False)}`\n\n"
                           f"本次进程费用统计：`{json.dumps(process, ensure_ascii=False)}`\n\n"
                           f"墙钟时间：{summary['wall_seconds']:.3f} 秒。\n\n{summary['cost_note']}\n", encoding="utf-8")
         logger.info("\n%s", table)
         logger.info("当前进程统计=%s total_seconds=%.3f；已发布标准预测文件", json.dumps(process), summary["wall_seconds"])
+        logger.info("全部实验统计（包含断点恢复）=%s", json.dumps(totals))
         return 0
     except (OSError, ValueError, RuntimeError, KeyError) as exc:
         logger.error("运行未完成：%s", exc)

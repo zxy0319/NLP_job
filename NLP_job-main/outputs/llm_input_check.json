@@ -1,0 +1,31 @@
+{
+  "status": "validated",
+  "seed": 42,
+  "dev_sha256": "e83b760ebc4dd7a31368533bb18fa3ef2728c67df2cb92c040c967cbb7272e13",
+  "test_sha256": "a75f906b15fb49698b253a6596efd3907e07e10572cf7c36bbd22bd1a13dd9a7",
+  "dev_samples": 990,
+  "test_samples": 992,
+  "test_label_counts": {
+    "negative": 460,
+    "positive": 532
+  },
+  "fewshot_examples": [
+    {
+      "text": "之前用的是X60.只喜欢小黑。很轻，几乎没有噪音，连硬盘转的声音都几乎听不见。配置主流，用相关软件测试了，cpu温度在今天这么热的天气也只有39。做工很精细，外表没的说，让人有一种爱不释手的感觉。确实是一款难得的笔记本。",
+      "label": "positive"
+    },
+    {
+      "text": "于丹所说的很多内容都在误导大众,看看网上的很多评论就知道了,个人觉得不值得去看!!",
+      "label": "negative"
+    },
+    {
+      "text": "价格便宜，性能强，设计简约大方，屏幕很舒服，总之总之 我买过4个本本 这个绝对是性价比最高的，超级高！！！！！",
+      "label": "positive"
+    }
+  ],
+  "dev_validation_samples": 100,
+  "planned_logical_calls": 2184,
+  "max_http_attempts": 6552,
+  "selection_split": "dev",
+  "predictions_generated": true
+}
