@@ -34,9 +34,13 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 
-from .evaluate import (
+# 相对本文件解析仓库根目录，并支持直接 `python src/eval/analyze_bad_cases.py` 执行（无需 -m）
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.eval.evaluate import (
     OUTPUTS_DIR,
-    REPO_ROOT,
     STANDARD_LABELS,
     load_predictions,
     load_test_gold,

@@ -28,8 +28,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from .metrics import compute_metrics
-from .visualize import plot_confusion_matrix
+# 相对本文件解析仓库根目录，避免依赖调用时的 cwd
+REPO_ROOT = Path(__file__).resolve().parents[2]
+# 支持直接 `python src/eval/evaluate.py` 执行（无需 -m）：把仓库根目录加入模块检索路径
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from src.eval.metrics import compute_metrics
+from src.eval.visualize import plot_confusion_matrix
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -39,8 +45,6 @@ if hasattr(sys.stderr, "reconfigure"):
 RANDOM_SEED = 42
 STANDARD_LABELS = ["positive", "negative"]
 
-# 相对本文件解析仓库根目录，避免依赖调用时的 cwd
-REPO_ROOT = Path(__file__).resolve().parents[2]
 TEST_FILE = REPO_ROOT / "data" / "processed" / "test.jsonl"
 OUTPUTS_DIR = REPO_ROOT / "outputs"
 LOG_DIR = REPO_ROOT / "logs"
