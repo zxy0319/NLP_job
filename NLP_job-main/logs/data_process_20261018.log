@@ -1,0 +1,16 @@
+2026-10-18 16:23:28,441 [INFO] Initialized data processing with random seed: 42
+2026-10-18 16:23:28,444 [INFO] Reading raw data from: data/raw/dataset.jsonl
+2026-10-18 16:23:28,599 [INFO] Field mapping applied: text <- 'text', label <- 'label'
+2026-10-18 16:23:28,603 [INFO] Total valid samples after cleaning: 5000
+2026-10-18 16:23:29,123 [INFO] Split [train.jsonl] written: 4000 samples | Avg text len: 116.89
+2026-10-18 16:23:29,193 [INFO] Split [dev.jsonl] written: 500 samples | Avg text len: 117.74
+2026-10-18 16:23:29,254 [INFO] Split [test.jsonl] written: 500 samples | Avg text len: 116.75
+2026-10-18 16:23:29,256 [INFO] Data pipeline finished successfully. Files saved to data/processed
+2026-10-18 16:57:33,768 [INFO] Initialized data processing with random seed: 42
+2026-10-18 16:57:33,769 [INFO] Reading raw data from: data/raw/dataset.jsonl
+2026-10-18 16:57:34,048 [INFO] Field mapping applied: text <- 'text', label <- 'label'
+2026-10-18 16:57:34,048 [INFO] Total valid samples after cleaning: 9906
+2026-10-18 16:57:34,129 [INFO] Split [train.jsonl] written: 7924 samples | Avg text len: 108.75
+2026-10-18 16:57:34,141 [INFO] Split [dev.jsonl] written: 990 samples | Avg text len: 108.84
+2026-10-18 16:57:34,153 [INFO] Split [test.jsonl] written: 992 samples | Avg text len: 108.33
+2026-10-18 16:57:34,154 [INFO] Data pipeline finished successfully. Files saved to data/processed
