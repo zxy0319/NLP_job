@@ -209,6 +209,46 @@ def build_comparison_table(results: list) -> str:
     return "\n".join(rows)
 
 
+def build_full_comparison_table(results: list) -> str:
+    """生成含各类别 P/R/F1 的全指标对比 Markdown 表（供报告 §5 引用）。"""
+    if not results:
+        return "（无可用结果）"
+    labels = results[0]["metrics"]["labels"]
+    header = (
+        "| 方案 | Accuracy | Macro-F1 | "
+        + " | ".join(f"P({l})" for l in labels)
+        + " | " + " | ".join(f"R({l})" for l in labels)
+        + " | " + " | ".join(f"F1({l})" for l in labels)
+        + " | 平均延迟(ms) |"
+    )
+    sep = "| " + " | ".join(["---"] * (4 + 3 * len(labels))) + " |"
+    rows = [header, sep]
+    for r in results:
+        m = r["metrics"]
+        pc = m["per_class"]
+        lat = f"{r['latency_stats']['mean_ms']:.2f}" if r["latency_stats"] else "-"
+        cells = [r["name"], f"{m['accuracy']:.4f}", f"{m['macro_f1']:.4f}"]
+        cells += [f"{pc[l]['precision']:.4f}" for l in labels]
+        cells += [f"{pc[l]['recall']:.4f}" for l in labels]
+        cells += [f"{pc[l]['f1']:.4f}" for l in labels]
+        cells.append(lat)
+        rows.append("| " + " | ".join(cells) + " |")
+    return "\n".join(rows)
+
+
+def _save_comparison_md(summary: str, full: str) -> Path:
+    """将横向对比表写入 outputs/comparison.md，供报告 §5 直接引用。"""
+    OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+    out = OUTPUTS_DIR / "comparison.md"
+    out.write_text(
+        "# 横向对比（Baseline vs LLM）\n\n"
+        "## 汇总\n\n" + summary + "\n\n"
+        "## 全指标明细\n\n" + full + "\n",
+        encoding="utf-8",
+    )
+    return out
+
+
 def run_selfcheck(logger: logging.Logger) -> list:
     """用真实测试集标签验证评测流水线：oracle 上界 + 多数类基线。"""
     gold = load_test_gold()
@@ -277,7 +317,12 @@ def run_compare(logger: logging.Logger) -> list:
         preds = load_predictions(pf)
         logger.info(f"读取 {pf.as_posix()}：{len(preds)} 条")
         results.append(evaluate_predictions(preds, gold, logger, pf.name))
-    logger.info("\n" + build_comparison_table(results))
+    summary = build_comparison_table(results)
+    full = build_full_comparison_table(results)
+    logger.info("\n" + summary)
+    logger.info("\n（全指标明细）\n" + full)
+    md_path = _save_comparison_md(summary, full)
+    logger.info(f"横向对比表已保存：{md_path.as_posix()}")
     return results
 
 
