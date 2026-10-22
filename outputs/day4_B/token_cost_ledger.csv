@@ -1,0 +1,5 @@
+﻿split,strategy,log_start_line,samples,prompt_tokens,completion_tokens,total_tokens,log_last_api_line,estimated_cost_CNY,mean_cost_per_prediction_CNY,accuracy_log_rounded,macro_f1_log_rounded,mean_latency_ms_log_rounded
+dev,zeroshot,4,100,15976,100,16076,114,0.032752,0.00032752,0.92,0.9197,818.418
+dev,fewshot,116,100,32176,100,32276,226,0.065152,0.00065152,0.94,0.9398,840.461
+test,zeroshot,229,992,151050,992,152042,1321,0.310036,0.0003125362903225806451612903226,0.9083,0.9082,755.967
+test,fewshot,1323,992,311754,992,312746,2415,0.631444,0.0006365362903225806451612903226,0.9204,0.9202,770.894

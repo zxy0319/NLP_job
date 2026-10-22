@@ -1,0 +1,45 @@
+digraph architecture {
+  graph [rankdir=TB, bgcolor="#F7F9FD", pad="0.45", nodesep="0.35", ranksep="0.5", dpi=220,
+         fontname="Microsoft YaHei", label="中文评论情感分类 · 双轨系统架构\nDay 4 / 成员 B · 数据流、提示选型与统一评测", labelloc=t, fontsize=23];
+  node [shape=box, style="rounded,filled", fillcolor="white", color="#BDCADC", penwidth=1.3,
+        fontname="Microsoft YaHei", fontsize=12, margin="0.2,0.13"];
+  edge [color="#687F9C", arrowsize=0.7, fontname="Microsoft YaHei", fontsize=10];
+  raw [label="公开评论数据\nChnSentiCorp"];
+  clean [label="清洗与脱敏 · 成员 A\n去空 / 去重 / 字段统一 / 四类敏感信息掩码\nseed=42 · 分层划分 8:1:1"];
+  train [label="train.jsonl\n7,924 条", fillcolor="#E7F0FF"];
+  dev [label="dev.jsonl\n990 条", fillcolor="#E7F0FF"];
+  test [label="test.jsonl · 冻结只读\n992 条 · 仅用于最终评测", fillcolor="#FFF1D6"];
+  raw -> clean;
+  clean -> train; clean -> dev; clean -> test;
+  {rank=same; train; dev; test;}
+  subgraph cluster_base {
+    label="非大模型轨 · 成员 A"; fontname="Microsoft YaHei"; color="#A8C7F2"; style="rounded";
+    baseline [label="jieba / 字级分词 → TF-IDF → LR\n训练仅使用 train"];
+    dense [label="原理点 2 对照\nWord2Vec 均值池化 → LR"];
+    baseinfer [label="冻结后的模型对 test 推理\n输出 preds_baseline / preds_principle2_dense"];
+    baseline -> baseinfer; dense -> baseinfer;
+  }
+  subgraph cluster_llm {
+    label="大模型轨 · 成员 B"; fontname="Microsoft YaHei"; color="#79C2B4"; style="rounded";
+    sample [label="固定抽取 3 个 dev 示例\n2 正 + 1 负 · 示例排除于验证子集"];
+    prompts [label="sentiment-v1 提示模板\nZero-shot：system + 评论\nFew-shot：system + 3 组示例 + 评论\n评论用 JSON 字符串隔离，不含目标真值"];
+    api [label="兼容 Chat Completions 的 HTTP 客户端\ndeepseek-flash（日志配置）· temperature=0\nthinking=disabled · max_tokens=64\n8 线程 · 60s 超时 · 最多 2 次重试"];
+    parse [label="唯一情感标签解析与校验\npositive / negative\n歧义或异常 → 重试；耗尽 → 报错保留断点"];
+    choose [label="同一 100 条 dev 验证子集比较\n按 Macro-F1 → Accuracy → Zero-shot 决胜\n选定 Few-shot 后冻结提示"];
+    infer [label="test 仅输入评论文本，分别运行两种策略\n使用同一冻结模板、API 调用及解析链\n主方案发布为 preds_llm.jsonl\n并保留 zeroshot / fewshot 预测文件"];
+    bill [label="工程证据与账单\nToken / 缓存 / 费用 / 延迟日志\n配置与数据指纹 · checkpoint · 原子发布", fillcolor="#E5F5EF"];
+    sample -> prompts -> api -> parse -> choose -> infer;
+    api -> bill [style=dashed, label="统计"];
+    infer -> bill [style=dashed, label="落盘"];
+  }
+  train -> baseline; train -> dense;
+  dev -> sample; dev -> choose [label="排除示例后抽 100 条"];
+  test -> baseinfer;
+  test -> infer [label="gold 仅供本地评测", color="#B98A35"];
+  contract [label="统一预测契约\n{text, gold_label, pred_label, latency_ms}", fillcolor="#E7F0FF"];
+  baseinfer -> contract; infer -> contract;
+  eval [label="统一评测与坏例归因 · 成员 C\n以 test 标签为权威，按 text 对齐\nAccuracy / Macro-F1 / 各类 P-R-F1 / 混淆矩阵\n延迟对比 · 坏例卡片 · comparison.md", fillcolor="#EAE7FA"];
+  contract -> eval; test -> eval [style=dashed, label="评价真值"];
+  report [label="报告整合 · A §1/§4前半 · B §3/§4 LLM/§7 · C §2/§5/§6\n注意：dev 对比先于测试集；数据真值不传入待分类请求", fillcolor="#233C61", fontcolor="white"];
+  eval -> report; bill -> report [style=dashed];
+}
