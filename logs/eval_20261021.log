@@ -62,3 +62,135 @@ negative            24         436
 | preds_llm_zeroshot.jsonl | 0.9083 | 0.9093 | 0.9112 | 0.9082 | 755.97 | 992 |
 | preds_principle2_dense.jsonl | 0.8034 | 0.8028 | 0.8014 | 0.8020 | 0.10 | 992 |
 2026-10-21 17:04:12,748 [INFO] 评测完成
+2026-10-21 17:21:53,456 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261021.log
+2026-10-21 17:21:53,456 [INFO] 统一评测脚本启动
+2026-10-21 17:21:53,457 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 17:21:53,468 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_baseline.jsonl：992 条
+2026-10-21 17:21:53,476 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm.jsonl：992 条
+2026-10-21 17:21:53,483 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_fewshot.jsonl：992 条
+2026-10-21 17:21:53,489 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_zeroshot.jsonl：992 条
+2026-10-21 17:21:53,498 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_principle2_dense.jsonl：992 条
+2026-10-21 17:21:53,500 [INFO] 
+| 方案 | Accuracy | Macro-P | Macro-R | Macro-F1 | 平均延迟(ms) | 样本数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8726 | 0.8719 | 0.8722 | 0.27 | 992 |
+| preds_llm.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9093 | 0.9112 | 0.9082 | 755.97 | 992 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8028 | 0.8014 | 0.8020 | 0.10 | 992 |
+2026-10-21 17:21:53,500 [INFO] 
+（全指标明细）
+| 方案 | Accuracy | Macro-F1 | P(positive) | P(negative) | R(positive) | R(negative) | F1(positive) | F1(negative) | 平均延迟(ms) |
+| --- || --- || --- || --- || --- || --- || --- || --- || --- || --- |
+| preds_baseline.jsonl | 0.8730 | 0.8722 | 0.8773 | 0.8678 | 0.8872 | 0.8565 | 0.8822 | 0.8621 | 0.27 |
+| preds_llm.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9082 | 0.9546 | 0.8639 | 0.8703 | 0.9522 | 0.9105 | 0.9059 | 755.97 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8020 | 0.8092 | 0.7964 | 0.8289 | 0.7739 | 0.8189 | 0.7850 | 0.10 |
+2026-10-21 17:21:53,502 [INFO] 横向对比表已保存：D:/桌面/作业/npl/NLP_job/outputs/comparison.md
+2026-10-21 17:21:53,502 [INFO] 评测完成
+2026-10-21 17:22:06,817 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261021.log
+2026-10-21 17:22:06,817 [INFO] 统一评测脚本启动
+2026-10-21 17:22:06,817 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 17:22:06,825 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_baseline.jsonl：992 条
+2026-10-21 17:22:06,831 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm.jsonl：992 条
+2026-10-21 17:22:06,835 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_fewshot.jsonl：992 条
+2026-10-21 17:22:06,840 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_zeroshot.jsonl：992 条
+2026-10-21 17:22:06,845 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_principle2_dense.jsonl：992 条
+2026-10-21 17:22:06,846 [INFO] 
+| 方案 | Accuracy | Macro-P | Macro-R | Macro-F1 | 平均延迟(ms) | 样本数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8726 | 0.8719 | 0.8722 | 0.27 | 992 |
+| preds_llm.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9093 | 0.9112 | 0.9082 | 755.97 | 992 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8028 | 0.8014 | 0.8020 | 0.10 | 992 |
+2026-10-21 17:22:06,846 [INFO] 
+（全指标明细）
+| 方案 | Accuracy | Macro-F1 | P(positive) | P(negative) | R(positive) | R(negative) | F1(positive) | F1(negative) | 平均延迟(ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8722 | 0.8773 | 0.8678 | 0.8872 | 0.8565 | 0.8822 | 0.8621 | 0.27 |
+| preds_llm.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9082 | 0.9546 | 0.8639 | 0.8703 | 0.9522 | 0.9105 | 0.9059 | 755.97 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8020 | 0.8092 | 0.7964 | 0.8289 | 0.7739 | 0.8189 | 0.7850 | 0.10 |
+2026-10-21 17:22:06,847 [INFO] 横向对比表已保存：D:/桌面/作业/npl/NLP_job/outputs/comparison.md
+2026-10-21 17:22:06,847 [INFO] 评测完成
+2026-10-21 17:22:42,239 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261021.log
+2026-10-21 17:22:42,239 [INFO] 统一评测脚本启动
+2026-10-21 17:22:42,239 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 17:22:42,249 [INFO] 读取预测文件 outputs/preds_llm.jsonl：992 条
+2026-10-21 17:22:42,250 [INFO] 
+===== 评测报告：preds_llm.jsonl =====
+样本数：992
+Accuracy     : 0.9204
+Macro-Precision: 0.9200
+Macro-Recall   : 0.9222
+Macro-F1       : 0.9202
+----------------------------------------
+label            P       R      F1   support
+positive    0.9521  0.8966  0.9235       532
+negative    0.8880  0.9478  0.9169       460
+----------------------------------------
+混淆矩阵（行=真实，列=预测）：
+              positive    negative
+positive           477          55
+negative            24         436
+----------------------------------------
+延迟统计：mean=770.89ms  min=346.18ms  max=2333.28ms  (n=992)
+2026-10-21 17:22:44,332 [INFO] 混淆矩阵图已保存：D:/桌面/作业/npl/NLP_job/outputs/confusion_matrix_preds_llm.png
+2026-10-21 17:22:44,333 [INFO] 评测完成
+2026-10-21 17:26:13,530 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261021.log
+2026-10-21 17:26:13,530 [INFO] 统一评测脚本启动
+2026-10-21 17:26:13,530 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 17:26:13,539 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_baseline.jsonl：992 条
+2026-10-21 17:26:13,547 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm.jsonl：992 条
+2026-10-21 17:26:13,552 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_fewshot.jsonl：992 条
+2026-10-21 17:26:13,557 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_zeroshot.jsonl：992 条
+2026-10-21 17:26:13,563 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_principle2_dense.jsonl：992 条
+2026-10-21 17:26:13,564 [INFO] 
+| 方案 | Accuracy | Macro-P | Macro-R | Macro-F1 | 平均延迟(ms) | 样本数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8726 | 0.8719 | 0.8722 | 0.27 | 992 |
+| preds_llm.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9093 | 0.9112 | 0.9082 | 755.97 | 992 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8028 | 0.8014 | 0.8020 | 0.10 | 992 |
+2026-10-21 17:26:13,564 [INFO] 
+（全指标明细）
+| 方案 | Accuracy | Macro-F1 | P(positive) | P(negative) | R(positive) | R(negative) | F1(positive) | F1(negative) | 平均延迟(ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8722 | 0.8773 | 0.8678 | 0.8872 | 0.8565 | 0.8822 | 0.8621 | 0.27 |
+| preds_llm.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9082 | 0.9546 | 0.8639 | 0.8703 | 0.9522 | 0.9105 | 0.9059 | 755.97 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8020 | 0.8092 | 0.7964 | 0.8289 | 0.7739 | 0.8189 | 0.7850 | 0.10 |
+2026-10-21 17:26:13,565 [INFO] 横向对比表已保存：D:/桌面/作业/npl/NLP_job/outputs/comparison.md
+2026-10-21 17:26:13,566 [INFO] 评测完成
+2026-10-21 17:26:30,636 [INFO] Log file: D:/桌面/作业/npl/NLP_job/logs/eval_20261021.log
+2026-10-21 17:26:30,636 [INFO] 统一评测脚本启动
+2026-10-21 17:26:30,636 [INFO] 随机种子 seed=42；标签空间=['positive', 'negative']
+2026-10-21 17:26:30,647 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_baseline.jsonl：992 条
+2026-10-21 17:26:30,654 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm.jsonl：992 条
+2026-10-21 17:26:30,660 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_fewshot.jsonl：992 条
+2026-10-21 17:26:30,666 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_llm_zeroshot.jsonl：992 条
+2026-10-21 17:26:30,670 [INFO] 读取 D:/桌面/作业/npl/NLP_job/outputs/preds_principle2_dense.jsonl：992 条
+2026-10-21 17:26:30,671 [INFO] 
+| 方案 | Accuracy | Macro-P | Macro-R | Macro-F1 | 平均延迟(ms) | 样本数 |
+| --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8726 | 0.8719 | 0.8722 | 0.27 | 992 |
+| preds_llm.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9200 | 0.9222 | 0.9202 | 770.89 | 992 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9093 | 0.9112 | 0.9082 | 755.97 | 992 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8028 | 0.8014 | 0.8020 | 0.10 | 992 |
+2026-10-21 17:26:30,671 [INFO] 
+（全指标明细）
+| 方案 | Accuracy | Macro-F1 | P(positive) | P(negative) | R(positive) | R(negative) | F1(positive) | F1(negative) | 平均延迟(ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| preds_baseline.jsonl | 0.8730 | 0.8722 | 0.8773 | 0.8678 | 0.8872 | 0.8565 | 0.8822 | 0.8621 | 0.27 |
+| preds_llm.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_fewshot.jsonl | 0.9204 | 0.9202 | 0.9521 | 0.8880 | 0.8966 | 0.9478 | 0.9235 | 0.9169 | 770.89 |
+| preds_llm_zeroshot.jsonl | 0.9083 | 0.9082 | 0.9546 | 0.8639 | 0.8703 | 0.9522 | 0.9105 | 0.9059 | 755.97 |
+| preds_principle2_dense.jsonl | 0.8034 | 0.8020 | 0.8092 | 0.7964 | 0.8289 | 0.7739 | 0.8189 | 0.7850 | 0.10 |
+2026-10-21 17:26:30,672 [INFO] 横向对比表已保存：D:/桌面/作业/npl/NLP_job/outputs/comparison.md
+2026-10-21 17:26:30,673 [INFO] 评测完成
