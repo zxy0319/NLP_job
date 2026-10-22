@@ -1,0 +1,33 @@
+test_b_module_exists (src.llm.test_llm.AvailabilityTests.test_b_module_exists) ... ok
+test_auth_errors_are_not_retried_and_key_is_not_logged (src.llm.test_llm.IntegrationTests.test_auth_errors_are_not_retried_and_key_is_not_logged) ... API attempt=1 failed=HTTP 401 latency_ms=1.068
+ok
+test_cli_end_to_end_selects_on_dev_and_does_not_modify_data (src.llm.test_llm.IntegrationTests.test_cli_end_to_end_selects_on_dev_and_does_not_modify_data) ... ok
+test_deepseek_non_thinking_and_cache_pricing (src.llm.test_llm.IntegrationTests.test_deepseek_non_thinking_and_cache_pricing) ... ok
+test_invalid_data_fails_before_network (src.llm.test_llm.IntegrationTests.test_invalid_data_fails_before_network) ... ok
+test_malformed_api_structure_is_retried_with_safe_error (src.llm.test_llm.IntegrationTests.test_malformed_api_structure_is_retried_with_safe_error) ... API attempt=1 failed=响应结构、结束原因或情感标签无效 latency_ms=19.189
+API attempt=2 failed=响应结构、结束原因或情感标签无效 latency_ms=0.787
+API attempt=3 failed=响应结构、结束原因或情感标签无效 latency_ms=0.769
+ok
+test_missing_key_rejected (src.llm.test_llm.IntegrationTests.test_missing_key_rejected) ... ok
+test_missing_or_invalid_cache_counts_are_not_claimed_complete (src.llm.test_llm.IntegrationTests.test_missing_or_invalid_cache_counts_are_not_claimed_complete) ... ok
+test_missing_usage_is_unknown_not_free (src.llm.test_llm.IntegrationTests.test_missing_usage_is_unknown_not_free) ... ok
+test_parallel_predictions_keep_order_and_exact_usage_on_resume (src.llm.test_llm.IntegrationTests.test_parallel_predictions_keep_order_and_exact_usage_on_resume) ... ok
+test_resume_recovers_interrupted_last_write (src.llm.test_llm.IntegrationTests.test_resume_recovers_interrupted_last_write) ... 恢复被中断的 checkpoint 末行
+ok
+test_resume_rejects_changed_samples (src.llm.test_llm.IntegrationTests.test_resume_rejects_changed_samples) ... ok
+test_resume_reuses_completed_rows_and_preserves_schema (src.llm.test_llm.IntegrationTests.test_resume_reuses_completed_rows_and_preserves_schema) ... ok
+test_retries_and_counts_unknown_billing (src.llm.test_llm.IntegrationTests.test_retries_and_counts_unknown_billing) ... API attempt=1 failed=HTTP 429 latency_ms=11.911
+ok
+test_truncated_http_response_is_retried (src.llm.test_llm.IntegrationTests.test_truncated_http_response_is_retried) ... API attempt=1 failed=连接失败、响应传输中断或超时 latency_ms=22.745
+API attempt=2 failed=连接失败、响应传输中断或超时 latency_ms=0.967
+API attempt=3 failed=连接失败、响应传输中断或超时 latency_ms=0.972
+ok
+test_dev_examples_have_both_classes_and_are_excluded (src.llm.test_llm.PromptTests.test_dev_examples_have_both_classes_and_are_excluded) ... ok
+test_extracts_unambiguous_labels (src.llm.test_llm.PromptTests.test_extracts_unambiguous_labels) ... ok
+test_only_text_goes_into_query (src.llm.test_llm.PromptTests.test_only_text_goes_into_query) ... ok
+test_rejects_ambiguous_or_missing_labels (src.llm.test_llm.PromptTests.test_rejects_ambiguous_or_missing_labels) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 1.271s
+
+OK
