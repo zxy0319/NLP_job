@@ -26,7 +26,14 @@ def main():
                *sorted((ROOT / "outputs").glob("preds_*.jsonl")),
                ROOT / "logs/llm_run_20261021.log",
                ROOT / "docs/report_draft_A.md", ROOT / "docs/report_draft_shtu.md"]
-    hashes = {p.relative_to(ROOT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in sources}
+    hashes = {
+    p.relative_to(ROOT).as_posix(): hashlib.sha256(
+        p.read_text(encoding="utf-8", errors="ignore").replace("\r\n", "\n").encode("utf-8")
+        if p.suffix in {".py", ".jsonl", ".log", ".md", ".json", ".txt", ".csv"}
+        else p.read_bytes()
+    ).hexdigest()
+    for p in sources 
+    }
     read = lambda name: [json.loads(x) for x in (ROOT / name).read_text(encoding="utf-8-sig").splitlines() if x.strip()]
     dev, test = read("data/processed/dev.jsonl"), read("data/processed/test.jsonl")
     examples, validation = split_dev(dev, shots=3, seed=42, limit=100)
@@ -100,7 +107,7 @@ def main():
     assert hashes['data/processed/dev.jsonl'] == 'e83b760ebc4dd7a31368533bb18fa3ef2728c67df2cb92c040c967cbb7272e13'
     assert hashes['data/processed/test.jsonl'] == 'a75f906b15fb49698b253a6596efd3907e07e10572cf7c36bbd22bd1a13dd9a7'
     for p in sources:
-        assert hashlib.sha256(p.read_bytes()).hexdigest() == hashes[p.relative_to(ROOT).as_posix()]
+        assert hashlib.sha256(p.read_text(encoding="utf-8", errors="ignore").replace("\r\n", "\n").encode("utf-8") if p.suffix in {".py", ".jsonl", ".log", ".md", ".json", ".txt", ".csv"} else p.read_bytes()).hexdigest() == hashes[p.relative_to(ROOT).as_posix()]
     evidence = {"status": "passed", "api_calls_during_audit": 0, "historical_config": config,
                 "stages": stages, "recorded_experiment_totals": recorded_total,
                 "predictions_recomputed": predictions, "fewshot_examples_reconstructed": examples,
