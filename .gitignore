@@ -11,3 +11,6 @@ miniconda/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+
+# 个人贡献声明（每人单独一份，仅随 zip 提交，不入 git）
+贡献声明_*.md
